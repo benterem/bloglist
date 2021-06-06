@@ -1,8 +1,8 @@
-const express = require('express')
+// const express = require('express')
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
 
-app.use(express.json())
+// app.use(express.json())
 
 blogsRouter.get('/', request, response => {
   Blog
