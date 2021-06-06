@@ -21,4 +21,4 @@ blogsRouter.post('/', (request, response) => {
       })
   })
 
-  module.exports = blogRouters
+  module.exports = blogsRouter
