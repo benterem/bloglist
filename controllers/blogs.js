@@ -4,7 +4,7 @@ const Blog = require('../models/blog')
 
 // app.use(express.json())
 
-blogsRouter.get('/', request, response => {
+blogsRouter.get('/', (request, response) => {
   Blog
     .find({})
     .then(blogs => {
