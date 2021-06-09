@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "jest --versbose"
+    "test": "jest --verbose"
   },
   "author": "",
   "license": "ISC",
