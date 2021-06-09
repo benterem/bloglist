@@ -99,4 +99,13 @@ describe('favorite blog', () => {
         const results = listHelper.favoriteBlog(listWithOneBlog)
         expect(results).toEqual({title: 'Go To Statement Considered Harmful', author: 'Edsger W. Dijkstra', likes: 5})
     })
+
+    test('of a bigger list is the largest like', () => {
+        const results = listHelper.favoriteBlog(blogs)
+        expect(results).toEqual({
+            title: "Canonical string reduction",
+            author: "Edsger W. Dijkstra",
+            likes: 12,
+        })
+    })
 })
