@@ -100,4 +100,14 @@ test('blogs with missing likes property default to 0', async () => {
   expect(blogObjects).toContainEqual({ ...newBlog, likes: 0})
 })
 
+test('blogs with missing url and title return 400 Bad Request', async () => {
+  await api
+    .post('/api/blogs')
+    .send({})
+    .expect(400)
+  
+  const response = await api.get('/api/blogs')
+  expect(response.body).toHaveLength(initialBlogs.length)
+})
+
 afterAll(() => mongoose.connection.close())
