@@ -29,14 +29,14 @@ beforeEach(async () => {
   await Promise.all(promiseArray)
 })
 
-test('notes are returned as JSON', async () => {
+test('blogs are returned as JSON', async () => {
   await api
     .get('/api/blogs')
     .expect(200)
     .expect('Content-Type', /application\/json/)
 })
 
-test('there are two notes', async () => {
+test('there are two blogs', async () => {
   await api
     .get('/api/blogs')
     .expect(200)
@@ -45,5 +45,40 @@ test('there are two notes', async () => {
   const response = await api.get('/api/blogs')
   expect(response.body).toHaveLength(initialBlogs.length)
 })
+
+test('have a unique identifier property, named id', async () => {
+  const response = await api.get('/api/blogs')
+  response.body.forEach(r => {
+    expect(r.id).toBeDefined()
+  })
+})
+
+test('a valid blog can be added', async () => {
+  const newBlog = {
+    title: "test",
+    author: "test mctester",
+    url: "https://example.com/",
+    likes: 55,
+  }
+  
+  await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .expect(201)
+    .expect('Content-Type', /application\/json/)
+
+    
+  const response = await api.get('/api/blogs')
+  const blogObjects = response.body.map(r => {
+    delete r.id
+    return r
+  })
+  expect(response.body).toHaveLength(initialBlogs.length + 1)
+  expect(blogObjects).toContainEqual(newBlog)
+})
+
+// test('blogs have \'likes\' property', async () => {
+
+// })
 
 afterAll(() => mongoose.connection.close())
