@@ -32,12 +32,12 @@ const blogsInDb = async () => {
   return blogs.map(blog => blog.toJSON())
 }
 
-const blogObjects = (blogs) => {
-  blogs = blogs.body.map(r => {
+const blogsWithOutId = (blogs) => {
+  blogs = blogs.map(r => {
   delete r.id
   return r
   })
   return blogs
 }
 
-module.exports = { initialBlogs, nonExistingId, blogsInDb }
+module.exports = { initialBlogs, nonExistingId, blogsInDb, blogsWithOutId }

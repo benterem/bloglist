@@ -6,22 +6,13 @@ const api = supertest(app)
 const Blog = require('../models/blog')
 
 
-// beforeEach(async () => {
-//   await Blog.deleteMany({})
-//   const blogObjects = helper.initialBlogs.map(blog => new Blog(blog))
-//   const promiseArray = blogObjects.map(blogObject => blogObject.save())
-//   await Promise.all(promiseArray)
-// })
-
 beforeEach(async () => {
   await Blog.deleteMany({})
-
-  let blogObject = new Blog(helper.initialBlogs[0])  
-  await blogObject.save()
-
-  blogObject = new Blog(helper.initialBlogs[1])  
-  await blogObject.save()
+  const blogObjects = helper.initialBlogs.map(blog => new Blog(blog))
+  const promiseArray = blogObjects.map(blogObject => blogObject.save())
+  await Promise.all(promiseArray)
 })
+
 
 test('blogs are returned as JSON', async () => {
   await api
@@ -62,13 +53,11 @@ test('a valid blog can be added', async () => {
     .expect('Content-Type', /application\/json/)
 
 
-  const notesAtEnd = await helper.blogsInDb()
-  const blogObjects = notesAtEnd.map(r => {
-    delete r.id
-    return r
-  })
-  expect(notesAtEnd).toHaveLength(helper.initialBlogs.length + 1)
-  expect(blogObjects).toContainEqual(newBlog)
+  const blogsAtEnd = await helper.blogsInDb()
+  const blogsWithOutId = helper.blogsWithOutId(blogsAtEnd)
+
+  expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1)
+  expect(blogsWithOutId).toContainEqual(newBlog)
 })
 
 test('blogs with missing likes property default to 0', async () => {
@@ -84,14 +73,12 @@ test('blogs with missing likes property default to 0', async () => {
    .expect(201)
    .expect('Content-Type', /application\/json/)
 
-  const notesAtEnd = await helper.blogsInDb()
-  expect(notesAtEnd).toHaveLength(helper.initialBlogs.length + 1)
+  const blogsAtEnd = await helper.blogsInDb()
+  expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1)
 
-  const blogObjects = notesAtEnd.map(r => {
-    delete r.id
-    return r
-  })
-  expect(blogObjects).toContainEqual({ ...newBlog, likes: 0})
+  const blogsWithOutId = helper.blogsWithOutId(blogsAtEnd)
+
+  expect(blogsWithOutId).toContainEqual({ ...newBlog, likes: 0})
 })
 
 test('blogs with missing url and title return 400 Bad Request', async () => {
@@ -100,8 +87,8 @@ test('blogs with missing url and title return 400 Bad Request', async () => {
     .send({})
     .expect(400)
   
-  const notesAtEnd = await helper.blogsInDb()
-  expect(notesAtEnd).toHaveLength(helper.initialBlogs.length)
+  const blogsAtEnd = await helper.blogsInDb()
+  expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
 })
 
 test('a blog can be deleted', async () => {
@@ -116,6 +103,31 @@ test('a blog can be deleted', async () => {
 
   expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length - 1)
   expect(blogsAtEnd).not.toContainEqual(blogToDelete)
+})
+
+test('a blog can be updated', async () => {
+  const blogsAtStart = await helper.blogsInDb()
+  const blogToBeUpdate = blogsAtStart[0]
+
+  const updatedBlog = {
+    title: "update",
+    author: "update mctester",
+    url: "https://example5.com/",
+    likes: 54353553
+  }
+
+  await api
+    .put(`/api/blogs/${blogToBeUpdate.id}`)
+    .send(updatedBlog)
+    .expect(200)
+    .expect('Content-Type', /application\/json/)
+
+  const blogsAtEnd = await helper.blogsInDb()
+
+  const blogsWithOutId = helper.blogsWithOutId(blogsAtEnd)
+
+  expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+  expect(blogsWithOutId).toContainEqual(updatedBlog)
 })
 
 afterAll(() => mongoose.connection.close())
