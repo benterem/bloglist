@@ -1,32 +1,26 @@
 const mongoose = require('mongoose')
 const supertest = require('supertest')
+const helper = require('./test_helper')
 const app = require('../app')
 const api = supertest(app)
 const Blog = require('../models/blog')
-const initialBlogs = [
-  {
-    _id: "5a422a851b54a676234d17f7",
-    title: "React patterns",
-    author: "Michael Chan",
-    url: "https://reactpatterns.com/",
-    likes: 7,
-    __v: 0
-  },
-  {
-    _id: "5a422aa71b54a676234d17f8",
-    title: "Go To Statement Considered Harmful",
-    author: "Edsger W. Dijkstra",
-    url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-    likes: 5,
-    __v: 0
-  }
-]
+
+
+// beforeEach(async () => {
+//   await Blog.deleteMany({})
+//   const blogObjects = helper.initialBlogs.map(blog => new Blog(blog))
+//   const promiseArray = blogObjects.map(blogObject => blogObject.save())
+//   await Promise.all(promiseArray)
+// })
 
 beforeEach(async () => {
   await Blog.deleteMany({})
-  const blogObjects = initialBlogs.map(blog => new Blog(blog))
-  const promiseArray = blogObjects.map(blogObject => blogObject.save())
-  await Promise.all(promiseArray)
+
+  let blogObject = new Blog(helper.initialBlogs[0])  
+  await blogObject.save()
+
+  blogObject = new Blog(helper.initialBlogs[1])  
+  await blogObject.save()
 })
 
 test('blogs are returned as JSON', async () => {
@@ -43,7 +37,7 @@ test('there are two blogs', async () => {
     .expect('Content-Type', /application\/json/)
 
   const response = await api.get('/api/blogs')
-  expect(response.body).toHaveLength(initialBlogs.length)
+  expect(response.body).toHaveLength(helper.initialBlogs.length)
 })
 
 test('have a unique identifier property, named id', async () => {
@@ -67,13 +61,13 @@ test('a valid blog can be added', async () => {
     .expect(201)
     .expect('Content-Type', /application\/json/)
 
-    
-  const response = await api.get('/api/blogs')
-  const blogObjects = response.body.map(r => {
+
+  const notesAtEnd = await helper.blogsInDb()
+  const blogObjects = notesAtEnd.map(r => {
     delete r.id
     return r
   })
-  expect(response.body).toHaveLength(initialBlogs.length + 1)
+  expect(notesAtEnd).toHaveLength(helper.initialBlogs.length + 1)
   expect(blogObjects).toContainEqual(newBlog)
 })
 
@@ -90,10 +84,10 @@ test('blogs with missing likes property default to 0', async () => {
    .expect(201)
    .expect('Content-Type', /application\/json/)
 
-  const response = await api.get('/api/blogs')
-  expect(response.body).toHaveLength(initialBlogs.length + 1)
+  const notesAtEnd = await helper.blogsInDb()
+  expect(notesAtEnd).toHaveLength(helper.initialBlogs.length + 1)
 
-  const blogObjects = response.body.map(r => {
+  const blogObjects = notesAtEnd.map(r => {
     delete r.id
     return r
   })
@@ -106,8 +100,22 @@ test('blogs with missing url and title return 400 Bad Request', async () => {
     .send({})
     .expect(400)
   
-  const response = await api.get('/api/blogs')
-  expect(response.body).toHaveLength(initialBlogs.length)
+  const notesAtEnd = await helper.blogsInDb()
+  expect(notesAtEnd).toHaveLength(helper.initialBlogs.length)
+})
+
+test('a blog can be deleted', async () => {
+  const blogsAtStart = await helper.blogsInDb()
+  const blogToDelete = blogsAtStart[0]
+
+  await api
+    .delete(`/api/blogs/${blogToDelete.id}`)
+    .expect(204)
+
+  const blogsAtEnd = await helper.blogsInDb()
+
+  expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length - 1)
+  expect(blogsAtEnd).not.toContainEqual(blogToDelete)
 })
 
 afterAll(() => mongoose.connection.close())
