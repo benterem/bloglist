@@ -27,13 +27,13 @@ test('there are two blogs', async () => {
     .expect(200)
     .expect('Content-Type', /application\/json/)
 
-  const response = await api.get('/api/blogs')
-  expect(response.body).toHaveLength(helper.initialBlogs.length)
+  const blogsAtEnd = await helper.blogsInDb()
+  expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
 })
 
 test('have a unique identifier property, named id', async () => {
-  const response = await api.get('/api/blogs')
-  response.body.forEach(r => {
+  const blogsAtEnd = await helper.blogsInDb()
+  blogsAtEnd.forEach(r => {
     expect(r.id).toBeDefined()
   })
 })
