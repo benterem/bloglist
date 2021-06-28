@@ -175,7 +175,7 @@ describe('when there is initially one user in the DB', () => {
     }
 
     const result = await api
-      .post('api/users')
+      .post('/api/users')
       .send(newUser)
       .expect(400)
       .expect('Content-Type', /application\/json/)
@@ -187,6 +187,50 @@ describe('when there is initially one user in the DB', () => {
     const usernames = usersAtEnd.map(u => u.username)
     expect(usernames).not.toContain(newUser.username)
 
+  })
+
+  test('creation fails when username is too shot', async() => {
+    const usersAtStart = await helper.usersInDb()
+
+    const newUser = {
+      username: 'a',
+      name: 'whaterver',
+      password: '123456hhhhh'
+    }
+
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    expect(result.body.error).toContain('is shorter than the minimum allowed length')
+    const usersAtEnd = await helper.usersInDb()
+    expect(usersAtEnd).toHaveLength(usersAtStart.length)
+    const usernames = usersAtEnd.map(u => u.username)
+    expect(usernames).not.toContain(newUser.username)
+  })
+
+  test('creation fails when password is too short', async() => {
+    const usersAtStart = await helper.usersInDb()
+
+    const newUser = {
+      username: 'test test',
+      name: 'whaterver',
+      password: '1'
+    }
+
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+    
+      expect(result.body.error).toContain('please enter a valid password')
+      const usersAtEnd = await helper.usersInDb()
+      expect(usersAtEnd).toHaveLength(usersAtStart.length)
+      const usernames = usersAtEnd.map(u => u.username)
+      expect(usernames).not.toContain(newUser.username)
   })
 })
 
