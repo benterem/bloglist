@@ -13,6 +13,10 @@ describe('when there are intially some blogs saved', () => {
   beforeEach(async () => {
     await Blog.deleteMany({})
     await Blog.insertMany(helper.initialBlogs)
+    await User.deleteMany({})
+    const passwordHash = await bcrypt.hash('secret', 10)
+    const user = new User({ username: 'root', passwordHash })
+    await user.save()
   })
 
   test('blogs are returned as JSON', async () => {
@@ -41,11 +45,16 @@ describe('when there are intially some blogs saved', () => {
   
   
   test('a valid blog can be added', async () => {
+    const userId = await helper.userId()
+    const users = await helper.usersInDb()
+    console.log(users[0].id)
+
     const newBlog = {
       title: "test",
       author: "test mctester",
       url: "https://example.com/",
       likes: 55,
+      userId: users[0].id
     }
     
     await api
@@ -67,6 +76,8 @@ describe('when there are intially some blogs saved', () => {
       title: "test",
       author: "test mctester",
       url: "https://example.com/",
+      user: "root"
+
     }
     
     await api
@@ -143,7 +154,7 @@ describe('when there is initially one user in the DB', () => {
     await user.save()
   })
 
-  test('creation succeeds with a fresh username', async () => {
+  test('creation succeeds with a unique username', async () => {
     const usersAtStart = await helper.usersInDb()
 
     const newUser = {
@@ -165,7 +176,7 @@ describe('when there is initially one user in the DB', () => {
     expect(usernames).toContain(newUser.username)
   })
 
-  test('creation fails with proper statuscode and message if username already taken', async() => {
+  test('creation fails if username already taken', async() => {
     const usersAtStart = await helper.usersInDb()
 
     const newUser = {

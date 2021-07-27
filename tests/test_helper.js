@@ -38,6 +38,11 @@ const usersInDb = async () => {
   return users.map(user => user.toJSON())
 }
 
+const userId = async () => {
+  const users = await usersInDb()
+  return users[0]._id
+}
+
 const blogsWithOutId = (blogs) => {
   blogs = blogs.map(r => {
   delete r.id
@@ -46,4 +51,4 @@ const blogsWithOutId = (blogs) => {
   return blogs
 }
 
-module.exports = { initialBlogs, nonExistingId, blogsInDb, blogsWithOutId, usersInDb }
+module.exports = { initialBlogs, nonExistingId, blogsInDb, blogsWithOutId, usersInDb, userId }
